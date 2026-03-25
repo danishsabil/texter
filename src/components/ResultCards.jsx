@@ -51,7 +51,7 @@ function CopyButton({ text }) {
   )
 }
 
-export default function ResultCards({ replies, onReset, onRegenerate, regenerating }) {
+export default function ResultCards({ replies, onReset, onRegenerate, regenerating, avoid, onAvoidChange }) {
   return (
     <div className="space-y-4">
       {replies.map((reply) => {
@@ -77,6 +77,16 @@ export default function ResultCards({ replies, onReset, onRegenerate, regenerati
           </div>
         )
       })}
+
+      <div className="pt-1">
+        <input
+          type="text"
+          value={avoid}
+          onChange={e => onAvoidChange(e.target.value)}
+          placeholder="Not feeling these? Tell it what to avoid... (e.g. stop starting with questions)"
+          className="w-full bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl px-4 py-3 text-sm text-white placeholder-[#333] focus:outline-none focus:border-[#444] transition-colors"
+        />
+      </div>
 
       <div className="flex gap-3">
         <button

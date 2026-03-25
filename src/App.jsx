@@ -29,6 +29,7 @@ export default function App() {
   const [loading, setLoading] = useState(false)
   const [regenerating, setRegenerating] = useState(false)
   const [error, setError] = useState('')
+  const [avoid, setAvoid] = useState('')
 
   function handleSaveKey(key) {
     localStorage.setItem('texter_api_key', key)
@@ -63,7 +64,7 @@ export default function App() {
     setError('')
     setLoadingFn(true)
     try {
-      const replies = await generateReplies(apiKey, mode, formData, images)
+      const replies = await generateReplies(apiKey, mode, { ...formData, avoid }, images)
       setResults(replies)
       setScreen('results')
     } catch (err) {
@@ -93,6 +94,7 @@ export default function App() {
     setImages([])
     setResults(null)
     setError('')
+    setAvoid('')
   }
 
   if (screen === 'apikey') {
@@ -125,6 +127,8 @@ export default function App() {
             onReset={handleReset}
             onRegenerate={handleRegenerate}
             regenerating={regenerating}
+            avoid={avoid}
+            onAvoidChange={setAvoid}
           />
         </div>
       </div>

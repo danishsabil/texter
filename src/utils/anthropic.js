@@ -10,7 +10,7 @@ Core principles you always follow:
 2. Implication over declaration. Sexual tension comes from what's left unsaid — the gap between what's written and what's meant. Never be explicit unless the conversation has clearly gone there.
 3. Specificity is everything. One specific detail from her profile beats any generic line. Reference what she actually said or showed.
 4. Always end with an open door. Every reply should make it effortless and fun for her to respond — a hook, a question, a challenge, a scenario.
-5. Short > long. Dating app messages should feel like texts, not essays. Under 3 sentences unless there's a clear reason to go longer.
+5. LENGTH IS CRITICAL. Replies must be 1-2 sentences MAX. Under 15 words is ideal. Think iMessage, not email. If you wrote more than 2 sentences, you failed. Cut it in half again.
 6. Match the energy she's giving, then raise it slightly. If she's dry and witty, match that. If she's flirty, push further.
 
 When generating replies, always produce exactly 3 options:
@@ -84,8 +84,6 @@ export async function generateReplies(apiKey, mode, formData, imageFiles) {
   })
 
   const raw = response.content[0].text.trim()
-
-  // Strip markdown code fences if present
   const cleaned = raw.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '').trim()
 
   try {
