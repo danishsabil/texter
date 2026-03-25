@@ -1,5 +1,6 @@
 import ImageUpload from './ImageUpload.jsx'
 import EnergySlider from './EnergySlider.jsx'
+import SharedFields from './SharedFields.jsx'
 
 export default function ReplyForm({ data, images, onChange, onImagesChange }) {
   return (
@@ -39,6 +40,8 @@ export default function ReplyForm({ data, images, onChange, onImagesChange }) {
         value={data.energy || 2}
         onChange={val => onChange({ ...data, energy: val })}
       />
+
+      <SharedFields data={data} onChange={onChange} />
     </div>
   )
 }

@@ -30,7 +30,6 @@ function CopyButton({ text }) {
       setCopied(true)
       setTimeout(() => setCopied(false), 1800)
     } catch {
-      // fallback for older browsers
       const el = document.createElement('textarea')
       el.value = text
       document.body.appendChild(el)
@@ -52,7 +51,7 @@ function CopyButton({ text }) {
   )
 }
 
-export default function ResultCards({ replies, onReset }) {
+export default function ResultCards({ replies, onReset, onRegenerate, regenerating }) {
   return (
     <div className="space-y-4">
       {replies.map((reply) => {
@@ -79,12 +78,33 @@ export default function ResultCards({ replies, onReset }) {
         )
       })}
 
-      <button
-        onClick={onReset}
-        className="w-full border border-[#2a2a2a] hover:border-[#3a3a3a] text-[#555] hover:text-[#888] rounded-xl py-3 text-sm transition-all"
-      >
-        Start over
-      </button>
+      <div className="flex gap-3">
+        <button
+          onClick={onRegenerate}
+          disabled={regenerating}
+          className="flex-1 bg-[#1a1a1a] border border-[#2a2a2a] hover:border-[#3a3a3a] text-[#888] hover:text-white rounded-xl py-3 text-sm font-medium transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        >
+          {regenerating ? (
+            <>
+              <span className="flex gap-1">
+                {[0,1,2].map(i => (
+                  <span key={i} className="w-1 h-1 bg-[#888] rounded-full animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
+                ))}
+              </span>
+              Reading the vibe...
+            </>
+          ) : (
+            'Try again'
+          )}
+        </button>
+
+        <button
+          onClick={onReset}
+          className="flex-1 border border-[#2a2a2a] hover:border-[#3a3a3a] text-[#555] hover:text-[#888] rounded-xl py-3 text-sm transition-all"
+        >
+          Start over
+        </button>
+      </div>
     </div>
   )
 }

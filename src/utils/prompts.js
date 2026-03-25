@@ -5,7 +5,14 @@ const ENERGY_LABELS = {
   4: 'Spicy',
 }
 
-export function buildOpenerPrompt({ platform, bio, photos }, hasImages) {
+function sharedSuffix({ avoid, styleNote }) {
+  const parts = []
+  if (styleNote?.trim()) parts.push(`Style note: ${styleNote.trim()}`)
+  if (avoid?.trim()) parts.push(`Avoid these patterns in your replies: ${avoid.trim()}`)
+  return parts.length ? '\n\n' + parts.join('\n') : ''
+}
+
+export function buildOpenerPrompt({ platform, bio, photos, avoid, styleNote }, hasImages) {
   const imageNote = hasImages
     ? 'The user has uploaded screenshot(s) of her dating app profile. Analyze the images to extract her bio, prompts, photos, and any relevant details. Use these details as the basis for the openers.'
     : ''
@@ -20,10 +27,10 @@ ${platformSection}
 ${bioSection}
 ${photoSection}
 
-Generate 3 opening messages for this profile. No "hey" or generic greetings. Reference something specific from her profile. Make it feel like it came from a real, confident person.`.trim()
+Generate 3 opening messages for this profile. No "hey" or generic greetings. Reference something specific from her profile. Make it feel like it came from a real, confident person.${sharedSuffix({ avoid, styleNote })}`.trim()
 }
 
-export function buildReplyPrompt({ history, lastMessage, energy }, hasImages) {
+export function buildReplyPrompt({ history, lastMessage, energy, avoid, styleNote }, hasImages) {
   const imageNote = hasImages
     ? 'The user has uploaded screenshot(s) of the conversation. Analyze the images to extract the full conversation history and her last message. Use these as the basis for your replies.'
     : ''
@@ -38,10 +45,10 @@ ${historySection}
 ${lastSection}
 Desired energy: ${energy} (${energyLabel}) — 1=banter, 2=flirty, 3=tension, 4=spicy
 
-Generate 3 replies. Match her energy and raise it slightly based on the desired energy level.`.trim()
+Generate 3 replies. Match her energy and raise it slightly based on the desired energy level.${sharedSuffix({ avoid, styleNote })}`.trim()
 }
 
-export function buildEscalatePrompt({ fullConvo, goal, energy }, hasImages) {
+export function buildEscalatePrompt({ fullConvo, goal, energy, avoid, styleNote }, hasImages) {
   const imageNote = hasImages
     ? 'The user has uploaded screenshot(s) of the conversation. Analyze the images to extract the full conversation. Use this as the basis for your replies.'
     : ''
@@ -56,5 +63,5 @@ ${convoSection}
 ${goalSection}
 Escalation energy: ${energy} (${energyLabel}) — 1=banter, 2=flirty, 3=tension, 4=spicy
 
-The vibe is good. Generate 3 replies that escalate the conversation in the direction of the goal. Match the energy level specified. Read her cues carefully before going spicy.`.trim()
+The vibe is good. Generate 3 replies that escalate the conversation in the direction of the goal. Match the energy level specified. Read her cues carefully before going spicy.${sharedSuffix({ avoid, styleNote })}`.trim()
 }

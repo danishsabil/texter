@@ -27,6 +27,7 @@ export default function App() {
   const [images, setImages] = useState([])
   const [results, setResults] = useState(null)
   const [loading, setLoading] = useState(false)
+  const [regenerating, setRegenerating] = useState(false)
   const [error, setError] = useState('')
 
   function handleSaveKey(key) {
@@ -58,14 +59,9 @@ export default function App() {
     return false
   }
 
-  async function handleSubmit(e) {
-    e.preventDefault()
-    if (!hasEnoughInput()) {
-      setError('Add some context — upload a screenshot or fill in at least one field.')
-      return
-    }
+  async function runGenerate(setLoadingFn) {
     setError('')
-    setLoading(true)
+    setLoadingFn(true)
     try {
       const replies = await generateReplies(apiKey, mode, formData, images)
       setResults(replies)
@@ -73,8 +69,21 @@ export default function App() {
     } catch (err) {
       setError(err.message || 'Something went wrong. Check your API key and try again.')
     } finally {
-      setLoading(false)
+      setLoadingFn(false)
     }
+  }
+
+  async function handleSubmit(e) {
+    e.preventDefault()
+    if (!hasEnoughInput()) {
+      setError('Add some context — upload a screenshot or fill in at least one field.')
+      return
+    }
+    await runGenerate(setLoading)
+  }
+
+  async function handleRegenerate() {
+    await runGenerate(setRegenerating)
   }
 
   function handleReset() {
@@ -104,13 +113,19 @@ export default function App() {
               <p className="text-[#555] text-xs mt-0.5">Pick one and send it. Don't overthink it.</p>
             </div>
             <button
-              onClick={handleReset}
+              onClick={() => setScreen('input')}
               className="text-[#444] text-xs hover:text-[#666] transition-colors"
             >
-              ← Back
+              ← Edit
             </button>
           </div>
-          <ResultCards replies={results} onReset={handleReset} />
+          {error && <p className="text-red-400 text-xs mb-4">{error}</p>}
+          <ResultCards
+            replies={results}
+            onReset={handleReset}
+            onRegenerate={handleRegenerate}
+            regenerating={regenerating}
+          />
         </div>
       </div>
     )

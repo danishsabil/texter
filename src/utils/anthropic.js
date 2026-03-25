@@ -78,6 +78,7 @@ export async function generateReplies(apiKey, mode, formData, imageFiles) {
   const response = await client.messages.create({
     model: 'claude-sonnet-4-6',
     max_tokens: 1024,
+    temperature: 1.0,
     system: SYSTEM_PROMPT,
     messages: [{ role: 'user', content }],
   })

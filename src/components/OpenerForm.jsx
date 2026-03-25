@@ -1,4 +1,5 @@
 import ImageUpload from './ImageUpload.jsx'
+import SharedFields from './SharedFields.jsx'
 
 const PLATFORMS = ['Hinge', 'Bumble', 'Tinder', 'Other']
 
@@ -55,6 +56,8 @@ export default function OpenerForm({ data, images, onChange, onImagesChange }) {
           className="w-full bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl px-4 py-3 text-sm text-white placeholder-[#333] focus:outline-none focus:border-[#444] transition-colors"
         />
       </div>
+
+      <SharedFields data={data} onChange={onChange} />
     </div>
   )
 }
