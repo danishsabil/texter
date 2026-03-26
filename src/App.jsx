@@ -5,23 +5,25 @@ import OpenerForm from './components/OpenerForm.jsx'
 import ReplyForm from './components/ReplyForm.jsx'
 import EscalateForm from './components/EscalateForm.jsx'
 import ResultCards from './components/ResultCards.jsx'
-import { generateReplies } from './utils/anthropic.js'
+import ProviderModelPicker from './components/ProviderModelPicker.jsx'
+import { generateReplies } from './utils/generate.js'
+import {
+  loadSettings, saveSettings, getActiveProvider, getActiveModel, PROVIDERS
+} from './utils/providerConfig.js'
 
-const MODE_LABELS = {
-  opener: 'Opener',
-  reply: 'Reply',
-  escalate: 'Escalate',
-}
+const MODE_LABELS = { opener: 'Opener', reply: 'Reply', escalate: 'Escalate' }
+const DEFAULT_FORM = { opener: { platform: 'Hinge' }, reply: { energy: 2 }, escalate: { energy: 3 } }
 
-const DEFAULT_FORM = {
-  opener: { platform: 'Hinge' },
-  reply: { energy: 2 },
-  escalate: { energy: 3 },
+function initState() {
+  const settings = loadSettings()
+  const provider = getActiveProvider(settings)
+  const model = provider ? getActiveModel(settings, provider) : null
+  return { settings, provider, model }
 }
 
 export default function App() {
-  const [apiKey, setApiKey] = useState(() => localStorage.getItem('texter_api_key') || '')
-  const [screen, setScreen] = useState(apiKey ? 'mode' : 'apikey')
+  const [{ settings, provider, model }, setState] = useState(initState)
+  const [screen, setScreen] = useState(provider ? 'mode' : 'apikey')
   const [mode, setMode] = useState(null)
   const [formData, setFormData] = useState({})
   const [images, setImages] = useState([])
@@ -31,16 +33,26 @@ export default function App() {
   const [error, setError] = useState('')
   const [avoid, setAvoid] = useState('')
 
-  function handleSaveKey(key) {
-    localStorage.setItem('texter_api_key', key)
-    setApiKey(key)
-    setScreen('mode')
+  function handleSaveKeys(keys) {
+    const next = { ...settings, keys }
+    const activeProvider = getActiveProvider(next)
+    const activeModel = activeProvider ? getActiveModel(next, activeProvider) : null
+    saveSettings(next)
+    setState({ settings: next, provider: activeProvider, model: activeModel })
+    setScreen(activeProvider ? 'mode' : 'apikey')
   }
 
-  function handleChangeKey() {
-    localStorage.removeItem('texter_api_key')
-    setApiKey('')
-    setScreen('apikey')
+  function handleProviderChange(p) {
+    const next = { ...settings, provider: p }
+    const m = getActiveModel(next, p)
+    saveSettings({ ...next, models: { ...settings.models, [p]: m } })
+    setState({ settings: next, provider: p, model: m })
+  }
+
+  function handleModelChange(m) {
+    const next = { ...settings, models: { ...settings.models, [provider]: m } }
+    saveSettings(next)
+    setState({ settings: next, provider, model: m })
   }
 
   function handleModeSelect(selectedMode) {
@@ -64,7 +76,9 @@ export default function App() {
     setError('')
     setLoadingFn(true)
     try {
-      const replies = await generateReplies(apiKey, mode, { ...formData, avoid }, images)
+      const apiKey = settings.keys?.[provider]
+      if (!apiKey) throw new Error(`No API key found for ${PROVIDERS[provider]?.name}.`)
+      const replies = await generateReplies(provider, apiKey, model, mode, { ...formData, avoid }, images)
       setResults(replies)
       setScreen('results')
     } catch (err) {
@@ -98,11 +112,32 @@ export default function App() {
   }
 
   if (screen === 'apikey') {
-    return <ApiKeySetup onSave={handleSaveKey} />
+    return (
+      <ApiKeySetup
+        initialKeys={settings.keys || {}}
+        onSave={handleSaveKeys}
+        isSettings={false}
+      />
+    )
+  }
+
+  if (screen === 'settings') {
+    return (
+      <ApiKeySetup
+        initialKeys={settings.keys || {}}
+        onSave={handleSaveKeys}
+        isSettings={true}
+      />
+    )
   }
 
   if (screen === 'mode') {
-    return <ModeSelect onSelect={handleModeSelect} onChangeKey={handleChangeKey} />
+    return (
+      <ModeSelect
+        onSelect={handleModeSelect}
+        onSettings={() => setScreen('settings')}
+      />
+    )
   }
 
   if (screen === 'results') {
@@ -114,10 +149,7 @@ export default function App() {
               <h2 className="text-lg font-semibold">Here's your ammo</h2>
               <p className="text-[#555] text-xs mt-0.5">Pick one and send it. Don't overthink it.</p>
             </div>
-            <button
-              onClick={() => setScreen('input')}
-              className="text-[#444] text-xs hover:text-[#666] transition-colors"
-            >
+            <button onClick={() => setScreen('input')} className="text-[#444] text-xs hover:text-[#666] transition-colors">
               ← Edit
             </button>
           </div>
@@ -135,21 +167,24 @@ export default function App() {
     )
   }
 
-  // Input screen
   const FormComponent = mode === 'opener' ? OpenerForm : mode === 'reply' ? ReplyForm : EscalateForm
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-start px-4 py-10">
       <div className="w-full max-w-lg">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <button
-              onClick={() => setScreen('mode')}
-              className="text-[#444] text-xs hover:text-[#666] transition-colors mb-2 block"
-            >
-              ← Back
-            </button>
+        <div className="mb-6">
+          <button onClick={() => setScreen('mode')} className="text-[#444] text-xs hover:text-[#666] transition-colors mb-3 block">
+            ← Back
+          </button>
+          <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold">{MODE_LABELS[mode]}</h2>
+            <ProviderModelPicker
+              keys={settings.keys || {}}
+              provider={provider}
+              model={model}
+              onProviderChange={handleProviderChange}
+              onModelChange={handleModelChange}
+            />
           </div>
         </div>
 
@@ -161,9 +196,7 @@ export default function App() {
             onImagesChange={setImages}
           />
 
-          {error && (
-            <p className="text-red-400 text-xs">{error}</p>
-          )}
+          {error && <p className="text-red-400 text-xs">{error}</p>}
 
           <button
             type="submit"
@@ -175,9 +208,7 @@ export default function App() {
                 <LoadingDots />
                 Reading the vibe...
               </span>
-            ) : (
-              'Generate replies'
-            )}
+            ) : 'Generate replies'}
           </button>
         </form>
       </div>
@@ -189,11 +220,7 @@ function LoadingDots() {
   return (
     <span className="flex gap-1 items-center">
       {[0, 1, 2].map(i => (
-        <span
-          key={i}
-          className="w-1.5 h-1.5 bg-black rounded-full animate-bounce"
-          style={{ animationDelay: `${i * 0.15}s` }}
-        />
+        <span key={i} className="w-1.5 h-1.5 bg-black rounded-full animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
       ))}
     </span>
   )

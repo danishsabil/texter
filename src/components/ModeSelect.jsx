@@ -22,7 +22,7 @@ const MODES = [
   },
 ]
 
-export default function ModeSelect({ onSelect, onChangeKey }) {
+export default function ModeSelect({ onSelect, onSettings }) {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12">
       <div className="w-full max-w-lg">
@@ -53,10 +53,10 @@ export default function ModeSelect({ onSelect, onChangeKey }) {
         </div>
 
         <button
-          onClick={onChangeKey}
+          onClick={onSettings}
           className="mt-8 text-[#444] text-xs hover:text-[#666] transition-colors"
         >
-          Change API key
+          Manage API keys
         </button>
       </div>
     </div>

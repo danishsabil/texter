@@ -1,3 +1,9 @@
+export function buildPrompt(mode, formData, hasImages) {
+  if (mode === 'opener') return buildOpenerPrompt(formData, hasImages)
+  if (mode === 'reply') return buildReplyPrompt(formData, hasImages)
+  return buildEscalatePrompt(formData, hasImages)
+}
+
 const ENERGY_LABELS = {
   1: 'Banter',
   2: 'Flirty',
