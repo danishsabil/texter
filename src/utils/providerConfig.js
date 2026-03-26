@@ -41,7 +41,16 @@ export const PROVIDER_LIST = Object.values(PROVIDERS)
 
 export function loadSettings() {
   try {
-    return JSON.parse(localStorage.getItem('texter_settings') || '{}')
+    const settings = JSON.parse(localStorage.getItem('texter_settings') || '{}')
+    // Migrate from old single-key format
+    const oldKey = localStorage.getItem('texter_api_key')
+    if (oldKey && !settings.keys?.anthropic) {
+      const migrated = { ...settings, keys: { ...settings.keys, anthropic: oldKey } }
+      localStorage.setItem('texter_settings', JSON.stringify(migrated))
+      localStorage.removeItem('texter_api_key')
+      return migrated
+    }
+    return settings
   } catch {
     return {}
   }
